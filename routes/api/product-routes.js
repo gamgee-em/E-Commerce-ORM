@@ -1,47 +1,27 @@
 const router = require('express').Router();
 const { Product, Category, Tag, ProductTag } = require('../../models');
+let productData;
 // The `/api/products` endpoint
 
-// get all products
+//* get all products
+//* find all products using sequelize findAll() method 
 router.get('/', async (req, res) => {
-  // find all products using sequelize findAll() method 
-    try {
-      const productData = await Product.findAll({
-      include: [
-        { 
-          model: Category ,
-        }
-      ]
-    });
-      res.json(productData);
-    } catch (err) {
-      res.json(productData);
-    }
-  });
-
-// get one product
-router.get('/:id', async (req, res) => {
-  // find a single product by its `id`
-  try {
-    const productData = await Product.findByPk(req.params.id, {
-      // be sure to include its associated Category and Tag data
-      where: {
-        id: req.params.id,
-      },
-      include: [
-          { 
-            model: Category ,
-            
-          },
-      ]
-    });
-    res.json(productData)
-  } catch (err) {
-    res.json(err);
-  }
+  productData = await Product.findAll({ include: {model: Category}})
+    .then(productData => res.json(productData))
+      .catch(err => res.json(err))
 });
+
+//* find a single product by its `id`
+//* be sure to include its associated Category and Tag data
+router.get('/:id', async (req, res) => {
+  productData = await Product.findByPk(req.params.id, {
+    include: { model: Category, model: Tag },
+    })
+      .then(productData => res.json(productData))
+        .catch(err => res.json(err))
+});
+
 // create new product
-router.post('/', (req, res) => {
   /* req.body should look like this...
     {
       product_name: "Basketball",
@@ -50,12 +30,13 @@ router.post('/', (req, res) => {
       tagIds: [1, 2, 3, 4]
     }
   */
+router.post('/', (req, res) => {
   Product.create(req.body)
     .then(product => {
       res.json(product);
         // if there's product tags, we need to create pairings to bulk create in the ProductTag model
-        if (req.body.tagIds.length) {
-          const productTagIdArr = req.body.tagIds.map((tag_id) => {
+        if (req.body.tagIds.length()) {
+          const productTagIdArr = req.body.tagIds.map(tag_id => {
             return {
               product_id: product.id,
               tag_id,
@@ -67,10 +48,7 @@ router.post('/', (req, res) => {
         res.status(200).json(product);
     }) 
     .then((productTagIds) => res.status(200).json(productTagIds))
-    .catch(err => {
-      if (err) throw err;
-      res.status(400).json(err);
-    });
+      .catch(err => res.status(400).json(err))
 });
 
 // update product
@@ -90,39 +68,31 @@ router.put('/:id', (req, res) => {
       // create filtered list of new tag_ids
       const newProductTags = req.body.tagIds
         .filter((tag_id) => !productTagIds.includes(tag_id))
-        .map((tag_id) => {
-          return {
-            product_id: req.params.id,
-            tag_id,
-          };
+          .map((tag_id) => {
+            return {
+              product_id: req.params.id,
+              tag_id,
+            };
         });
       // figure out which ones to remove
       const productTagsToRemove = productTags
         .filter(({ tag_id }) => !req.body.tagIds.includes(tag_id))
-        .map(({ id }) => id);
-
+          .map(({ id }) => id);
       // run both actions
       return Promise.all([
         ProductTag.destroy({ where: { id: productTagsToRemove } }),
         ProductTag.bulkCreate(newProductTags),
       ]);
     })
-    .then((updatedProductTags) => res.json(updatedProductTags))
-    .catch((err) => {
-      // console.log(err);
-      res.status(400).json(err);
-    });
+      .then(updatedProductTags => res.json(updatedProductTags))
+        .catch(err => res.status(400).json(err));
 });
 
-router.delete('/:id', (req, res) => {
-  // delete one product by its `id` value
-  Product.destroy({
-    where: req.params.id
-  }).then(productData => res.json('No products with matching id available'))
-  .catch(err => {
-    if (err) throw err;
-    res.json(err);
-  });
+//* delete one product by its `id` value
+router.delete('/:id', async(req, res) => {
+  productData = await Product.destroy({ where: { id: req.params.id } })
+    .then(productData => res.json(productData))
+      .catch(err => res.json(err))
 });
 
 module.exports = router;

@@ -1,45 +1,27 @@
 const router = require('express').Router();
 const { Tag, Product, ProductTag } = require('../../models');
-
-// The `/api/tags` endpoint
+let tagData;
+//* The `/api/tags` endpoint
+//* find all tags 
 router.get('/', async (req, res) => {
-  // find all tags
-  try {
-    const tagData = await Tag.findAll({
-      include: [{ model: Product}]
-   });
-  res.json(tagData);
-  } catch (err) {
-    if (err) throw err;
-    res.json(err);
-  };
-  // be sure to include its associated Product data
+  tagData = await Tag.findAll(/* {include: { model: Product}} */)
+    .then(tagData => res.json(tagData))
+      .catch(err => res.json(err))
 });
 
-// find a single tag by its `id`
-// be sure to include its associated Product data
-
+//* find a single tag by its `id`
+//* be sure to include its associated Product data
 router.get('/:id', async (req, res) => {
-  try {
-    const tagData = await Tag.findByPk(req.params.id, {
-      include: [{ model: Product }]
-    });
-    res.json(tagData);
-  } catch(err) {
-    res.json(err);
-  };
+  tagData = await Tag.findByPk(req.params.id, /* {include: { model: Product } }*/)
+    .then(tagData => res.json(tagData))
+      .catch(err => res.json(err))
 });
 
 router.post('/', async (req, res) => {
   // create a new tag
-  try {
-    const tagData = await Tag.create({
-
-    })
-  } catch (err) {
-    if (err) throw err;
-    res.json(tagData);
-  }
+  tagData = await Tag.create({})
+    .then(tagData => res.json(tagData))
+      .catch (err => res.json(err))
 });
 
 router.put('/:id', (req, res) => {
