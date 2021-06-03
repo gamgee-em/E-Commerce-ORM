@@ -24,7 +24,7 @@ Product.init(
       allowNull: false,
       defaultValue: 0,
       validate: {
-        isInt: true,
+        isDecimal: true,
       }
     },
     stock: {
