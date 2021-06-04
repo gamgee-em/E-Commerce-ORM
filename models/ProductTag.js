@@ -33,7 +33,7 @@ ProductTag.init(
     freezeTableName: true,
     underscored: true,
     modelName: 'product_tag',
-  }
+  },
 );
 
 module.exports = ProductTag;
