@@ -27,21 +27,21 @@ router.post('/', (req, res) => {
           return ProductTag.bulkCreate(productTagIdArr);
         }
     }) 
-    .then((productTagIds) => res.status(200).json({ newProduct, productTagIds }))
+    .then(productTagIds => res.status(200).json({ newProduct, productTagIds }))
       .catch(err => res.status(400).json(err))
 });
 
 router.put('/:id', (req, res) => {
   Product.update(req.body, { where: { id: req.params.id },
-  }).then((product) => {
+  }).then(product => {
       return ProductTag.findAll({ where: { product_id: req.params.id } });
     })
-    .then((productTags) => {
+    .then(productTags => {
       const productTagIds = productTags.map(({ tag_id }) => tag_id);
       // create filtered list of new tag_ids
       const newProductTags = req.body.tagIds
-        .filter((tag_id) => !productTagIds.includes(tag_id))
-          .map((tag_id) => {
+        .filter(tag_id => !productTagIds.includes(tag_id))
+          .map(tag_id => {
             return {
               product_id: req.params.id,
               tag_id,
